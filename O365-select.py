@@ -1,8 +1,11 @@
 ###################################
 # O365-select.py
+# EN : this script is a customization of the microsoft script, it allows to extract the IP of some services of microsoft to integrate them in a file txt for feeds / dynamic ip list. it can be started by a task scheduled to be up to date.
+# FR: ce script est une personnalisatin du script de microsoft , il permet extraire les IP  de certains services de microsoft  pour les integrer dans un fichier txt  pour des feeds / dynamic ip list . il peut etre lancé par une tache planifié  pour etre a jour . 
+# 
 # for start script :python3  O365-select.py
 #
-#
+# pre-requis/ Pre-requisites : python 3
 #
 #
 #by Macpav   - 16/02/2019
@@ -20,10 +23,12 @@ def webApiGet(methodName, instanceName, clientRequestId):
     with urllib.request.urlopen(request) as response:
         return json.loads(response.read().decode())
 #####################################
-#pattern for extract IP 
+# champs de recherche pour extraire les IP / pattern for extract all IP 
 ndd_extract='*.mail.protection.outlook.com'
-# path where client ID and latest version number will be stored
+# repertoire et ou fichier pour creer le fichier txt ( stockage de parametre aussi ) / directory and or file to create the txt file (parameter storage too)
 datapath = 'mail_protection_outlook_com.txt'
+# 1 pour voir l'execution du script O pour ne rien voir  / 1 to see the execution of the script O to see nothing
+show = '0'
 #####################################
 # fetch client ID and version if data exists; otherwise create new file
 if os.path.exists(datapath):
@@ -31,11 +36,9 @@ if os.path.exists(datapath):
         for line in fin:
             if line.startswith( '####version=' ) :
                 line = line.replace("####version=", "")
-                print(line )
                 latestVersion =line
             if line.startswith( '####RequestId=' ) :
                 line = line.replace("####RequestId=", "")
-                print(line )
                 clientRequestId =line
 else:
     clientRequestId = str(uuid.uuid4())
@@ -45,32 +48,13 @@ else:
 # call version method to check the latest version, and pull new data if version number is different
 version = webApiGet('version', 'Worldwide', clientRequestId)
 if version['latest'] > latestVersion:
-    print('New version of Office 365 worldwide commercial service instance endpoints detected')
+    if show == '1' :    print('New version of Office 365 worldwide commercial service instance endpoints detected')
     # write the new version number to the data file
     file = open(datapath,"w") 
     file.write('####version='+version['latest']+'\n####RequestId='+clientRequestId+'\n')
     # invoke endpoints method to get the new data
     endpointSets = webApiGet('endpoints', 'Worldwide', clientRequestId)
     # filter results for Allow and Optimize endpoints, and transform these into tuples with port and category
-    flatUrls = []
-    print(endpointSets)
-    for endpointSet in endpointSets:
-        if endpointSet['category'] in ('Optimize', 'Allow'):
-            category = endpointSet['category']
-            urls = endpointSet['urls'] if 'urls' in endpointSet else []
-            tcpPorts = endpointSet['tcpPorts'] if 'tcpPorts' in endpointSet else ''
-            udpPorts = endpointSet['udpPorts'] if 'udpPorts' in endpointSet else ''
-            flatUrls.extend([(category, url, tcpPorts, udpPorts) for url in urls])
-    flatIps = []
-    for endpointSet in endpointSets:
-        if endpointSet['category'] in ('Optimize', 'Allow'):
-            ips = endpointSet['ips'] if 'ips' in endpointSet else []
-            category = endpointSet['category']
-            # IPv4 strings have dots while IPv6 strings have colons
-            ip4s = [ip for ip in ips if '.' in ip]
-            tcpPorts = endpointSet['tcpPorts'] if 'tcpPorts' in endpointSet else ''
-            udpPorts = endpointSet['udpPorts'] if 'udpPorts' in endpointSet else ''
-            flatIps.extend([(category, ip, tcpPorts, udpPorts) for ip in ip4s])
     flatUrls2 = []
     flatIps2 = []
     for endpointSet in endpointSets:
@@ -87,16 +71,12 @@ if version['latest'] > latestVersion:
             udpPorts = endpointSet['udpPorts'] if 'udpPorts' in endpointSet else ''
             flatUrls2.extend([(category, url, tcpPorts, udpPorts) for url in urls])
             flatIps2.extend([(category, ip, tcpPorts, udpPorts) for ip in ip4s])
-    print('IPv4 Firewall IP Address Ranges')
-    print(','.join(sorted(set([ip for (category, ip, tcpPorts, udpPorts) in flatIps]))))
-    print('URLs for Proxy Server')
-    print(','.join(sorted(set([url for (category, url, tcpPorts, udpPorts) in flatUrls]))))
-    print('URLs2 for Proxy Server')
-    print(','.join(sorted(set([url for (category, url, tcpPorts, udpPorts) in flatUrls2]))))
-    print('IPv4 Firewall IP Address Ranges')
+    if show == '1' :    print('URLs2 for Proxy Server')
+    if show == '1' :    print(','.join(sorted(set([url for (category, url, tcpPorts, udpPorts) in flatUrls2]))))
+    if show == '1' :    print('IPv4 Firewall IP Address Ranges')
     file.write('\n' .join(sorted(set([ip for (category, ip, tcpPorts, udpPorts) in flatIps2])))) 
     file.close() 
-    print(','.join(sorted(set([ip for (category, ip, tcpPorts, udpPorts) in flatIps2]))))
+    if show == '1' :    print(','.join(sorted(set([ip for (category, ip, tcpPorts, udpPorts) in flatIps2]))))
     # TODO send mail (e.g. with smtplib/email modules) with new endpoints data
 else:
     print('Office 365 worldwide commercial service instance endpoints are up-to-date')
