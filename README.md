@@ -9,6 +9,7 @@
  
  
  Francais:
+ 
  ce script est une personnalisation du script de microsoft , il permet extraire les  adresses IP  de certains services de microsoft  pour les integrer dans un fichier txt  pour des creer  feeds / dynamic ip list  automatiquement . 
  il peut etre lancé par une tache planifié  pour etre a jour regulierement .
  
@@ -16,8 +17,11 @@
  pour mon cas , exchange hybride  donc *.mail.protection.outlook.com . 
  
 configuration  possible :
+
    -champs de recherche  (ndd_extract)
+   
    -emplacement du fichier   ( datapath )
+   
    -affiche un retour dans la console  ( show )
 
  
