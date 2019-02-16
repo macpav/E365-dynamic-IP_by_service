@@ -1,3 +1,12 @@
+###################################
+# O365-select.py
+# for start script :python3  O365-select.py
+#
+#
+#
+#
+#by Macpav   - 16/02/2019
+#####################################
 import json
 import os
 import urllib
@@ -10,8 +19,12 @@ def webApiGet(methodName, instanceName, clientRequestId):
     request = urllib.request.Request(requestPath)
     with urllib.request.urlopen(request) as response:
         return json.loads(response.read().decode())
+#####################################
+#pattern for extract IP 
+ndd_extract='*.mail.protection.outlook.com'
 # path where client ID and latest version number will be stored
 datapath = 'mail_protection_outlook_com.txt'
+#####################################
 # fetch client ID and version if data exists; otherwise create new file
 if os.path.exists(datapath):
     with open(datapath, 'r') as fin:
@@ -64,8 +77,7 @@ if version['latest'] > latestVersion:
         if endpointSet['category'] in ('Optimize', 'Allow'):
             category = endpointSet['category']
             urls = endpointSet['urls'] if 'urls' in endpointSet else []
-            strin='.office.com'
-            index=str(urls).find(strin)
+            index=str(urls).find(ndd_extract)
             ips = endpointSet['ips'] if 'ips' in endpointSet else []
             ip4s = [ip for ip in ips if '.' in ip]
             if index == -1 :
